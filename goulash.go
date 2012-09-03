@@ -8,10 +8,10 @@ import (
 type BaseBot struct {
 	server, channel, botnick string
 	conn net.Conn
-	MainLoop func()
+	ResponseFunc func(string)
 }
 
-func NewBaseBot(server, channel, botnick string, response_func func()) *BaseBot {
+func NewBaseBot(server, channel, botnick string, response_func func(string)) *BaseBot {
 	var new_obj BaseBot
 	new_obj.server = server
 	new_obj.channel = channel
@@ -22,13 +22,30 @@ func NewBaseBot(server, channel, botnick string, response_func func()) *BaseBot 
 }
 
 func (bot *BaseBot) Run() {
+	var text, requester string
+	var ping_flag bool
+	var buffer string
 	for {
-		text := bot.Recv()
-		if text == "PING" {
-			bot.pong()
-		} else
+		text = bot.Recv(&buffer)
+		ping_flag = bot.GetPing(text)
+		if ping_flag {
+			requester = bot.GetPingName(buffer)
+			bot.Pong(requester)
+		} else {
 			bot.ResponseFunc(text)
 		}
+	}
+}
+
+func (bot *BaseBot) GetPingName(text string) string {
+	return text[5:]
+}
+
+func (bot *BaseBot) GetPing(text string) bool {
+	if text[:4] == "PING" {
+		return true
+	} else {
+		return false
 	}
 }
 
@@ -42,6 +59,12 @@ func (bot *BaseBot) Connect() {
 	}
 }
 
+func (bot *BaseBot) Recv(buffer string) {
+	_, err := bot.conn.Read(string)	
+	if err != nil {
+		//handle error
+	}
+}
 func (bot *BaseBot) Send(msg string) {
 	fmt.Fprintf(bot.conn, msg)
 }
@@ -52,6 +75,7 @@ func (bot *BaseBot) Ping(target string) {
 
 func (bot *BaseBot) Pong(target string) {
 	bot.Send("PONG" + " " + target)
+}
 
 func (bot *BaseBot) SendMsg(msg string) {
 	bot.Send("PRIVMSG " + bot.channel + " :" + msg + "\n")
