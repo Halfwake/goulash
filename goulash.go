@@ -16,7 +16,7 @@ func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
 	new_obj.server = server
 	new_obj.channel = channel
 	new_obj.botnick = botnick
-	new_obj.Connect()
+	new_obj.connect()
 	new_obj.ResponseFunc = responseFunc	
 	return &new_obj
 }
@@ -48,7 +48,7 @@ func (bot *baseBot) isPing(text string) bool {
 }
 
 //Connects the bot to whatever server is found in its 'server' field.
-func (bot *baseBot) Connect() {
+func (bot *baseBot) connect() {
 	tempCon, err := net.Dial("tcp", bot.server + ":" + "6667")
 
 	if err != nil {
@@ -56,6 +56,12 @@ func (bot *baseBot) Connect() {
 	} else {
 		bot.conn = tempCon
 	}
+}
+
+//Connect the bot to a target server.
+func (bot *baseBot) Connect(server string) {
+	bot.server = server
+	bot.connect()
 }
 
 //Recovers text from the 'conn' field of the bot.
