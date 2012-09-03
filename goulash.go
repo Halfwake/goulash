@@ -24,12 +24,11 @@ func NewBaseBot(server, channel, botnick string, response_func func(string)) *Ba
 func (bot *BaseBot) Run() {
 	var text, requester string
 	var ping_flag bool
-	var buffer string
 	for {
-		text = bot.Recv(&buffer)
+		text = bot.Recv()
 		ping_flag = bot.GetPing(text)
 		if ping_flag {
-			requester = bot.GetPingName(buffer)
+			requester = bot.GetPingName(text)
 			bot.Pong(requester)
 		} else {
 			bot.ResponseFunc(text)
@@ -42,11 +41,7 @@ func (bot *BaseBot) GetPingName(text string) string {
 }
 
 func (bot *BaseBot) GetPing(text string) bool {
-	if text[:4] == "PING" {
-		return true
-	} else {
-		return false
-	}
+	return text[:4] == "PING"
 }
 
 func (bot *BaseBot) Connect() {
@@ -59,11 +54,14 @@ func (bot *BaseBot) Connect() {
 	}
 }
 
-func (bot *BaseBot) Recv(buffer string) {
-	_, err := bot.conn.Read(string)	
+func (bot *BaseBot) Recv() string {
+	var buffer []byte
+	_, err := bot.conn.Read(buffer)	
+
 	if err != nil {
 		//handle error
 	}
+	return string(buffer)
 }
 func (bot *BaseBot) Send(msg string) {
 	fmt.Fprintf(bot.conn, msg)
