@@ -13,11 +13,11 @@ type baseBot struct {
 
 func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
 	var new_obj baseBot
-	new_obj.server = server
-	new_obj.channel = channel
-	new_obj.botnick = botnick
-	new_obj.connect()
-	new_obj.ResponseFunc = responseFunc	
+	newObj.server = server
+	newObj.channel = channel
+	newObj.botnick = botnick
+	newObj.connect()
+	newObj.ResponseFunc = responseFunc	
 	return &new_obj
 }
 
