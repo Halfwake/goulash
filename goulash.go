@@ -3,6 +3,14 @@ package goulash
 import (
 	"fmt"
 	"net"
+	"regexp"
+	"strings"
+)
+
+var (
+	PrivMatch, _ = regexp.Compile(`^(:\w+\s+)?PRIVMSG\s+\w\s+`)
+	PingMatch, _ = regexp.Compile(`^PING\s+\w+\s*`)
+	PongMatch, _ = regexp.Compile(`^PONG\s+\w+\s*`)
 )
 
 type baseBot struct {
@@ -12,13 +20,13 @@ type baseBot struct {
 }
 
 func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
-	var new_obj baseBot
+	var newObj baseBot
 	newObj.server = server
 	newObj.channel = channel
 	newObj.botnick = botnick
 	newObj.connect()
 	newObj.ResponseFunc = responseFunc	
-	return &new_obj
+	return &newObj
 }
 
 //Starts the main loop of the bot. Only pings are handled by default.
@@ -39,12 +47,12 @@ func (bot *baseBot) Run() {
 
 //Gets the name of who sent a ping request.
 func (bot *baseBot) pingName(text string) string {
-	return text[5:]
+	return strings.Trim(text[5:], " \t\n")
 }
 
 //Decides whether or not a string is a ping request.
 func (bot *baseBot) isPing(text string) bool {
-	return text[:4] == "PING"
+	return nil != PingMatch.Find([]byte( text))
 }
 
 //Connects the bot to whatever server is found in its 'server' field.
