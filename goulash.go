@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	PrivMatch, _ = regexp.Compile(`^(:\w+\s+)?PRIVMSG\s+\w\s+`)
-	PingMatch, _ = regexp.Compile(`^PING\s+\w+\s*`)
-	PongMatch, _ = regexp.Compile(`^PONG\s+\w+\s*`)
+	PrivMatch = regexp.MustCompile(`^(:\w+\s+)?PRIVMSG\s+\w\s+`)
+	PingMatch = regexp.MustCompile(`^PING\s+\w+\s*`)
+	PongMatch = regexp.MustCompile(`^PONG\s+\w+\s*`)
 )
 
 type baseBot struct {
@@ -47,12 +47,12 @@ func (bot *baseBot) Run() {
 
 //Gets the name of who sent a ping request.
 func (bot *baseBot) pingName(text string) string {
-	return strings.Trim(text[5:], " \t\n")
+	return strings.TrimSpace(text[5:])
 }
 
 //Decides whether or not a string is a ping request.
 func (bot *baseBot) isPing(text string) bool {
-	return nil != PingMatch.Find([]byte( text))
+	return ""  != PingMatch.FindString(text)
 }
 
 //Connects the bot to whatever server is found in its 'server' field.
