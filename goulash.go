@@ -5,30 +5,31 @@ import (
 	"net"
 )
 
-type BaseBot struct {
+type baseBot struct {
 	server, channel, botnick string
 	conn net.Conn
 	ResponseFunc func(string)
 }
 
-func NewBaseBot(server, channel, botnick string, response_func func(string)) *BaseBot {
-	var new_obj BaseBot
+func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
+	var new_obj baseBot
 	new_obj.server = server
 	new_obj.channel = channel
 	new_obj.botnick = botnick
 	new_obj.Connect()
-	new_obj.ResponseFunc = response_func	
+	new_obj.ResponseFunc = responseFunc	
 	return &new_obj
 }
 
-func (bot *BaseBot) Run() {
+//Starts the main loop of the bot. Only pings are handled by default.
+func (bot *baseBot) Run() {
 	var text, requester string
-	var ping_flag bool
+	var pingFlag bool
 	for {
 		text = bot.Recv()
-		ping_flag = bot.GetPing(text)
-		if ping_flag {
-			requester = bot.GetPingName(text)
+		pingFlag = bot.isPing(text)
+		if pingFlag {
+			requester = bot.pingName(text)
 			bot.Pong(requester)
 		} else {
 			bot.ResponseFunc(text)
@@ -36,25 +37,29 @@ func (bot *BaseBot) Run() {
 	}
 }
 
-func (bot *BaseBot) GetPingName(text string) string {
+//Gets the name of who sent a ping request.
+func (bot *baseBot) pingName(text string) string {
 	return text[5:]
 }
 
-func (bot *BaseBot) GetPing(text string) bool {
+//Decides whether or not a string is a ping request.
+func (bot *baseBot) isPing(text string) bool {
 	return text[:4] == "PING"
 }
 
-func (bot *BaseBot) Connect() {
-	temp_con, err := net.Dial("tcp", bot.server + ":" + "6667")
+//Connects the bot to whatever server is found in its 'server' field.
+func (bot *baseBot) Connect() {
+	tempCon, err := net.Dial("tcp", bot.server + ":" + "6667")
 
 	if err != nil {
 		//handle error
 	} else {
-		bot.conn = temp_con
+		bot.conn = tempCon
 	}
 }
 
-func (bot *BaseBot) Recv() string {
+//Recovers text from the 'conn' field of the bot.
+func (bot *baseBot) Recv() string {
 	var buffer []byte
 	_, err := bot.conn.Read(buffer)	
 
@@ -63,26 +68,33 @@ func (bot *BaseBot) Recv() string {
 	}
 	return string(buffer)
 }
-func (bot *BaseBot) Send(msg string) {
+
+//Sends a string through the 'conn' field of the bot.
+func (bot *baseBot) Send(msg string) {
 	fmt.Fprintf(bot.conn, msg)
 }
 
-func (bot *BaseBot) Ping(target string) {
+//Pings a target.
+func (bot *baseBot) Ping(target string) {
 	bot.Send("PING" + " " + target)
 }
 
-func (bot *BaseBot) Pong(target string) {
+//Pongs a target, is handled automatically by the 'Run' method.
+func (bot *baseBot) Pong(target string) {
 	bot.Send("PONG" + " " + target)
 }
 
-func (bot *BaseBot) SendMsg(msg string) {
+//Sends a private message to a target.
+func (bot *baseBot) SendMsg(msg string) {
 	bot.Send("PRIVMSG " + bot.channel + " :" + msg + "\n")
 }
 
-func (bot *BaseBot) JoinChannel() {
+//Joins the channel found in the bots 'channel' field.
+func (bot *baseBot) JoinChannel() {
 	bot.Send("JOIN" + " " + bot.channel + "\n")
 }
 
-func (bot *BaseBot) Quit() {
+//Quits the server.
+func (bot *baseBot) Quit() {
 	bot.Send("QUIT\n")
 }
