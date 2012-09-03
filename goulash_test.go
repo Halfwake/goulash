@@ -6,10 +6,10 @@ import(
 )
 
 func TestBotInit(t *testing.T) {
-	bot := goulash.BaseBot
-	bot.ResponseFunc = func(text string) {
+	responseFunc := func(text string) {
 		fmt.Println(text)
 	}
+	bot := New("irc.freenode.net", "#go-nuts", "goulashBot", responseFunc)
 	if bot == nil {
 		t.Error("Failure to construct.")
 	}
