@@ -11,18 +11,29 @@ type BaseBot struct {
 	MainLoop func()
 }
 
-func NewBaseBot(server, channel, botnick string, main_loop_func func()) *BaseBot {
+func NewBaseBot(server, channel, botnick string, response_func func()) *BaseBot {
 	var new_obj BaseBot
 	new_obj.server = server
 	new_obj.channel = channel
 	new_obj.botnick = botnick
 	new_obj.Connect()
-	new_obj.MainLoop = main_loop_func	
+	new_obj.ResponseFunc = response_func	
 	return &new_obj
 }
 
+func (bot *BaseBot) Run() {
+	for {
+		text := bot.Recv()
+		if text == "PING" {
+			bot.pong()
+		} else
+			bot.ResponseFunc(text)
+		}
+	}
+}
+
 func (bot *BaseBot) Connect() {
-	temp_con, err := net.Dial("tcp",bot.server + ":" + "6667")
+	temp_con, err := net.Dial("tcp", bot.server + ":" + "6667")
 
 	if err != nil {
 		//handle error
@@ -31,13 +42,16 @@ func (bot *BaseBot) Connect() {
 	}
 }
 
-func (bot *BaseBot) Send(msg string){
+func (bot *BaseBot) Send(msg string) {
 	fmt.Fprintf(bot.conn, msg)
 }
 
 func (bot *BaseBot) Ping(target string) {
 	bot.Send("PING" + " " + target)
 }
+
+func (bot *BaseBot) Pong(target string) {
+	bot.Send("PONG" + " " + target)
 
 func (bot *BaseBot) SendMsg(msg string) {
 	bot.Send("PRIVMSG " + bot.channel + " :" + msg + "\n")
