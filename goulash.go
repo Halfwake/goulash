@@ -14,18 +14,19 @@ var (
 )
 
 type baseBot struct {
-	server, channel, botnick string
+	server, channel, botNick string
 	conn net.Conn
 	ResponseFunc func(string)
+	StartFunc func()
 }
 
-func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
+func New(server, channel, botNick string, responseFunc func(string), startFunc func()) *baseBot {
 	var newObj baseBot
 	newObj.server = server
 	newObj.channel = channel
-	newObj.botnick = botnick
-	newObj.connect()
+	newObj.botNick = botNick
 	newObj.ResponseFunc = responseFunc	
+	newObj.StartFunc = startFunc
 	return &newObj
 }
 
@@ -33,6 +34,8 @@ func New(server, channel, botnick string, responseFunc func(string)) *baseBot {
 func (bot *baseBot) Run() {
 	var text, requester string
 	var pingFlag bool
+	bot.StartFunc()
+	if bot.conn == nil {bot.connect()}
 	for {
 		text = bot.Recv()
 		pingFlag = bot.isPing(text)
@@ -64,15 +67,27 @@ func (bot *baseBot) connect() {
 		fmt.Println("Could not connect to server.")
 	} else {
 		bot.conn = tempCon
+		bot.identify()
+		bot.UserMsg()
+		bot.joinChannel()
 	}
+}
+
+//Sends a USER message to the server.
+func (bot *baseBot) UserMsg() {
+	bot.Send("USER" + " " + bot.botNick + " " + "a" + " " + "a" + " " + ":Anno")
 }
 
 //Connect the bot to a target server.
 func (bot *baseBot) Connect(server string) {
-	bot.server = server
+	if server != "" {bot.server = server}
 	bot.connect()
 }
 
+//Identify nickname
+func (bot *baseBot) identify() {
+	bot.Send("NICK" + " " + bot.botNick)
+}
 //Recovers text from the 'conn' field of the bot.
 func (bot *baseBot) Recv() string {
 	buff := make([]byte, 1024) 
@@ -106,8 +121,15 @@ func (bot *baseBot) SendMsg(msg string) {
 }
 
 //Joins the channel found in the bots 'channel' field.
-func (bot *baseBot) JoinChannel() {
+func (bot *baseBot) joinChannel() {
 	bot.Send("JOIN" + " " + bot.channel + "\n")
+}
+
+
+//Joins the target channel
+func (bot *baseBot) JoinChannel(target string) {
+	if target != "" {bot.channel = target}
+	bot.joinChannel()
 }
 
 //Quits the server.
