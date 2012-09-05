@@ -39,7 +39,7 @@ func (bot *baseBot) Run() {
 		if pingFlag {
 			requester = bot.pingName(text)
 			bot.Pong(requester)
-		} else {
+		} else if text != "" {
 			bot.ResponseFunc(text)
 		}
 	}
@@ -61,6 +61,7 @@ func (bot *baseBot) connect() {
 
 	if err != nil {
 		//handle error
+		fmt.Println("Could not connect to server.")
 	} else {
 		bot.conn = tempCon
 	}
@@ -74,13 +75,14 @@ func (bot *baseBot) Connect(server string) {
 
 //Recovers text from the 'conn' field of the bot.
 func (bot *baseBot) Recv() string {
-	var buffer []byte
-	_, err := bot.conn.Read(buffer)	
+	buff := make([]byte, 1024) 
+	_, err := bot.conn.Read(buff)	
 
 	if err != nil {
 		//handle error
+		fmt.Printf("Error recovering text.\n%s\n", err)
 	}
-	return string(buffer)
+	return string(buff)
 }
 
 //Sends a string through the 'conn' field of the bot.
