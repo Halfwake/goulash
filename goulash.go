@@ -11,6 +11,7 @@ var (
 	PrivMatch = regexp.MustCompile(`^(:\w+\s+)?PRIVMSG\s+\w\s+`)
 	PingMatch = regexp.MustCompile(`^PING\s+\w+\s*`)
 	PongMatch = regexp.MustCompile(`^PONG\s+\w+\s*`)
+	//Needs some server startup regexp matches
 )
 
 type baseBot struct {
@@ -33,16 +34,16 @@ func New(server, channel, botNick string, responseFunc func(string), startFunc f
 //Starts the main loop of the bot. Only pings are handled by default.
 func (bot *baseBot) Run() {
 	var text, requester string
-	var pingFlag bool
+
 	bot.StartFunc()
-	if bot.conn == nil {bot.connect()}
+	if bot.conn == nil {bot.Connect("")} //If the 'StartFunc' doesn't connect the bot it will connect automatically
+	//The text processing loop
 	for {
 		text = bot.Recv()
-		pingFlag = bot.isPing(text)
-		if pingFlag {
+		if bot.isPing(text) { //Handles all ping messages.
 			requester = bot.pingName(text)
 			bot.Pong(requester)
-		} else if text != "" {
+		} else if text != "" { //Handles all text. If the text does not contain any characters it is ignored.
 			bot.ResponseFunc(text)
 		}
 	}
@@ -58,8 +59,10 @@ func (bot *baseBot) isPing(text string) bool {
 	return ""  != PingMatch.FindString(text)
 }
 
-//Connects the bot to whatever server is found in its 'server' field.
-func (bot *baseBot) connect() {
+//Connects the bot to the target server, and changes the server field  If the target server is an empty string the bot
+//will attempt to connect to its 'server' field.
+func (bot *baseBot) Connect(server string) {
+	if server != "" {bot.server = server}
 	tempCon, err := net.Dial("tcp", bot.server + ":" + "6667")
 
 	if err != nil {
@@ -69,19 +72,13 @@ func (bot *baseBot) connect() {
 		bot.conn = tempCon
 		bot.identify()
 		bot.UserMsg()
-		bot.joinChannel()
+		bot.JoinChannel("")
 	}
 }
 
 //Sends a USER message to the server.
 func (bot *baseBot) UserMsg() {
 	bot.Send("USER" + " " + bot.botNick + " " + "a" + " " + "a" + " " + ":Anno")
-}
-
-//Connect the bot to a target server.
-func (bot *baseBot) Connect(server string) {
-	if server != "" {bot.server = server}
-	bot.connect()
 }
 
 //Identify nickname
@@ -120,16 +117,11 @@ func (bot *baseBot) SendMsg(msg string) {
 	bot.Send("PRIVMSG " + bot.channel + " :" + msg + "\n")
 }
 
-//Joins the channel found in the bots 'channel' field.
-func (bot *baseBot) joinChannel() {
+//Changes the 'channel' field to the target channel joins the target channel. If the target channel is an empty
+//string the bot will attempt to connect to its current channel field. 
+func (bot *baseBot) JoinChannel(channel string) {
+	if channel != "" {bot.channel = channel}
 	bot.Send("JOIN" + " " + bot.channel + "\n")
-}
-
-
-//Joins the target channel
-func (bot *baseBot) JoinChannel(target string) {
-	if target != "" {bot.channel = target}
-	bot.joinChannel()
 }
 
 //Quits the server.
