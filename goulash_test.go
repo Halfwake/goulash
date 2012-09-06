@@ -2,17 +2,15 @@ package goulash
 
 import(
 	"testing"
-	"fmt"
+	"log"
 )
 
 func TestBotInit(t *testing.T) {
-	responseFunc := func(text string) {
-		fmt.Println(text)
-	}
-	startFunc := func() {
-	}
-	bot := New("irc.freenode.net", "#go-nuts", "goulashBot", responseFunc, startFunc)
+	bot := New("irc.freenode.net", "#go-nuts", "goulashBot")
 	if bot == nil {
-		t.Error("Failure to construct.")
+		log.Fatal("Failure to construct.")
 	}
+	bot.OnStart = func(bot *BaseBot) {}
+	bot.Response = func(bot *BaseBot, text string) {bot.Quit()}
+	bot.Run()
 }
