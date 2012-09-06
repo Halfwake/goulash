@@ -3,6 +3,7 @@ package goulash
 import (
 	"fmt"
 	"net"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -66,12 +67,10 @@ func (bot *baseBot) Connect(server string) {
 	tempCon, err := net.Dial("tcp", bot.server + ":" + "6667")
 
 	if err != nil {
-		//handle error
-		fmt.Println("Could not connect to server.")
+		log.Fatal(err)
 	} else {
 		bot.conn = tempCon
 		bot.identify()
-		bot.UserMsg()
 		bot.JoinChannel("")
 	}
 }
@@ -83,6 +82,7 @@ func (bot *baseBot) UserMsg() {
 
 //Identify nickname
 func (bot *baseBot) identify() {
+	bot.Send("USER" + " " + bot.botNick + " " + bot.botNick + " " + bot.botNick + " " + ":" + bot.botNick)
 	bot.Send("NICK" + " " + bot.botNick)
 }
 //Recovers text from the 'conn' field of the bot.
@@ -91,8 +91,7 @@ func (bot *baseBot) Recv() string {
 	_, err := bot.conn.Read(buff)	
 
 	if err != nil {
-		//handle error
-		fmt.Printf("Error recovering text.\n%s\n", err)
+		log.Fatal(err)
 	}
 	return string(buff)
 }
@@ -114,17 +113,17 @@ func (bot *baseBot) Pong(target string) {
 
 //Sends a private message to a target.
 func (bot *baseBot) SendMsg(msg string) {
-	bot.Send("PRIVMSG " + bot.channel + " :" + msg + "\n")
+	bot.Send("PRIVMSG " + bot.channel + " :" + msg)
 }
 
 //Changes the 'channel' field to the target channel joins the target channel. If the target channel is an empty
 //string the bot will attempt to connect to its current channel field. 
 func (bot *baseBot) JoinChannel(channel string) {
 	if channel != "" {bot.channel = channel}
-	bot.Send("JOIN" + " " + bot.channel + "\n")
+	bot.Send("JOIN" + " " + bot.channel)
 }
 
 //Quits the server.
 func (bot *baseBot) Quit() {
-	bot.Send("QUIT\n")
+	bot.Send("QUIT")
 }
