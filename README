@@ -1,0 +1,28 @@
+package main
+
+/*
+Goulash is a simple bot framework meant for making simple text processing programs over IRC. Goulash is ideal for simple AI bots, scraping chats with regular expressions, counting words, and any other simple text related programs on IRC.
+*/
+
+//To create a text parser for a goulash bot is easy.
+
+func main() {
+	myBot := goulash.New("irc.freenode.net", "#go-nuts", "goulashBot") //Intializes a bot with a server, channel, and nick name.
+	bot.OnStart = func(bot *BaseBot) {fmt.Println("Starting!")} //Assigns an optional startup function
+	bot.Response = func(bot *BaseBot, text string) {bot.Quit()} //Assigns a mandatory run function
+	bot.Run() //Starts the bot and auto connects if 'OnStart' doesn't connect on its own or 'OnStart' has now been assigned.
+}
+
+//Here's a list of some of the methods that can be called on a goulash bot.
+/*
+Connect
+JoinChannel
+Ping
+Pong
+Quit
+Recv
+Send
+SendMsg
+UserMsg
+*/
+//For further documentation see the method comments in the 'goulash.go' file.
